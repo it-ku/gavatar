@@ -63,6 +63,11 @@ func (ag *AvatarGenerate) SetAvatarSize(width, height int) {
 	ag.H = height
 }
 
+// SetFontSize 设置字体大小，默认字号64
+func (ag *AvatarGenerate) SetFontSize(size float64) {
+	ag.fontSize = size
+}
+
 func (ag *AvatarGenerate) GenerateImage(s string, outFileName string) error {
 	bs, err := ag.GenerateImageContent(s)
 	if err != nil {
@@ -94,17 +99,17 @@ func (ag *AvatarGenerate) GenerateImageContent(s string) ([]byte, error) {
 			return nil, err
 		}
 	}
-	x := ag.W / 2
-	y := ag.H / 2
+	x := ag.W / 2 - (ag.GetFontWidth() *3/5)/2
+	y := ag.H / 2 + ag.GetFontWidth() *4/11
 
 	pt := freetype.Pt(x, y)
 	if _, err := ag.ctx.DrawString(s, pt); err != nil {
-		return nil, fmt.Errorf("draw string: %w", err)
+		return nil, fmt.Errorf("draw string error: %w", err)
 	}
 
 	buf := &bytes.Buffer{}
 	if err := png.Encode(buf, rgba); err != nil {
-		return nil, fmt.Errorf("png encode: %w", err)
+		return nil, fmt.Errorf("png encode error: %w", err)
 	}
 
 	return buf.Bytes(), nil
@@ -147,6 +152,9 @@ func (ag *AvatarGenerate) hexToRGBA(h uint32) *color.RGBA {
 		B: uint8(h & 0x0000ff),
 		A: 255,
 	}
-
 	return rgba
+}
+
+func (ag *AvatarGenerate) GetFontWidth() int {
+	return int(ag.ctx.PointToFixed(ag.fontSize) >> 6)
 }
